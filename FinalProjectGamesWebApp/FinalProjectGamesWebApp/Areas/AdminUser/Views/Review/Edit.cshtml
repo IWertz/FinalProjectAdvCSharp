@@ -1,0 +1,33 @@
+﻿@model Review
+@{
+    ViewData["Title"] = "Edit";
+}
+
+@if (Model.ReviewId == 0)
+{
+    <h2>Add Review</h2>
+}
+else
+{
+    <h2>Edit Review</h2>
+}
+<p style="color:red;">@ViewBag.FailEdit</p>
+<form asp-action="Edit" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Rating">Rating</label>
+        <input asp-for="Rating" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ReviewContent">Review Content</label>
+        <textarea class="form-control" asp-for="ReviewContent" rows="3">@Model.ReviewContent</textarea>
+    </div>
+
+    <input type="hidden" asp-for="ReviewId" />
+    <input type="hidden" asp-for="GameId" />
+    <input type="hidden" asp-for="UserId" />
+
+    <button type="submit" class="btn btn-primary">Confirm</button>
+    <a asp-controller="Review" asp-action="View" asp-route-id="@Model.ReviewId" class="btn btn-primary">Cancel</a>
+</form>

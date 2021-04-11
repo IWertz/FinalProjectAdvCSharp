@@ -1,0 +1,80 @@
+﻿@model List<Review>
+@{
+    ViewBag.Title = "List";
+}
+
+@if (ViewBag.SortOrder == null)
+{
+    <style>
+        a.sort-user {
+            color: dodgerblue;
+        }
+    </style>
+}
+else if (ViewBag.SortOrder == "user_desc")
+{
+    <style>
+        a.sort-user {
+            color: red;
+        }
+    </style>
+}
+else
+{
+    <style>
+        a.sort-user {
+            color: black;
+        }
+    </style>
+}
+@if (ViewBag.SortOrder == "rating")
+{
+    <style>
+        a.sort-rating {
+            color: dodgerblue;
+        }
+    </style>
+}
+else if (ViewBag.SortOrder == "rating_desc")
+{
+    <style>
+        a.sort-rating {
+            color: red;
+        }
+    </style>
+}
+else
+{
+    <style>
+        a.sort-rating {
+            color: black;
+        }
+    </style>
+}
+
+<h2>@ViewBag.GameTitle Reviews</h2>
+
+<a asp-action="Add">Add Review</a>
+<table class="table table-boardered table-striped">
+    <thead>
+        <tr>
+            <th>@Html.ActionLink("User", "List", new { id = ViewBag.GameId, sortOrder = ViewBag.UserSortParm }, new { @class = "sort-user" })</th>
+            <th>@Html.ActionLink("Rating", "List", new { id = ViewBag.GameId, sortOrder = ViewBag.RatingSortParm }, new { @class = "sort-rating" })</th>
+            <th>Review Content</th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Review r in Model)
+        {
+            <tr>
+                <td>@r.User.UserName</td>
+                <td>@r.Rating</td>
+                <td>@r.ReviewContent</td>
+                <td>
+                    <a asp-action="View" asp-controller="Review" asp-route-id="@r.ReviewId">View</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,32 @@
+﻿@model User
+@{
+    ViewBag.Title = "Account";
+}
+
+<h2>My Account</h2>
+
+<p><strong>@Model.UserName's Account</strong></p>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>User ID</th>
+            <th>User Name</th>
+            <th>User Password</th>
+            <th>User Auth Level</th>
+            <th> </th>
+            <th> </th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@Model.UserId</td>
+            <td>@Model.UserName</td>
+            <td>@Model.Password</td>
+            <td>@Model.AuthLevel</td>
+            <td><a asp-controller="User" asp-action="Edit" asp-route-id="@Model.UserId">Edit Account</a></td>
+            <td><a asp-controller="User" asp-action="Delete" asp-route-id="@Model.UserId">Delete Account</a></td>
+            <td><a asp-controller="Home" asp-action="Index">Return to Home</a></td>
+        </tr>
+    </tbody>
+</table>

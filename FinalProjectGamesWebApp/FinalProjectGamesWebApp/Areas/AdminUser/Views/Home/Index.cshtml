@@ -1,0 +1,107 @@
+﻿@model List<Game>
+@{
+    ViewBag.Title = "Games List";
+}
+
+@if (ViewBag.SortOrder == null)
+{
+    <style>
+        a.sort-title {
+            color: dodgerblue;
+        }
+    </style>
+}
+else if (ViewBag.SortOrder == "title_desc")
+{
+    <style>
+        a.sort-title {
+            color: red;
+        }
+    </style>
+}
+else
+{
+    <style>
+        a.sort-title {
+            color: black;
+        }
+    </style>
+}
+@if (ViewBag.SortOrder == "rating")
+{
+    <style>
+        a.sort-rating {
+            color: dodgerblue;
+        }
+    </style>
+}
+else if (ViewBag.SortOrder == "rating_desc")
+{
+    <style>
+        a.sort-rating {
+            color: red;
+        }
+    </style>
+}
+else
+{
+    <style>
+        a.sort-rating {
+            color: black;
+        }
+    </style>
+}
+@if (ViewBag.SortOrder == "review")
+{
+    <style>
+        a.sort-review {
+            color: dodgerblue;
+        }
+    </style>
+}
+else if (ViewBag.SortOrder == "review_desc")
+{
+    <style>
+        a.sort-review {
+            color: red;
+        }
+    </style>
+}
+else
+{
+    <style>
+        a.sort-review {
+            color: black;
+        }
+    </style>
+}
+
+<h2>Games List</h2>
+
+<p><strong>Welcome, admin @ViewBag.UserName</strong></p>
+<a asp-controller="Game" asp-action="Add">Add Game</a>
+<table class="table table-boardered table-striped">
+    <thead>
+        <tr>
+            <th>@Html.ActionLink("Title", "Index", new { sortOrder = ViewBag.TitleSortParm }, new { @class = "sort-title" })</th>
+            <th>@Html.ActionLink("Rating", "Index", new { sortOrder = ViewBag.RatingSortParm }, new { @class = "sort-rating" })</th>
+            <th>@Html.ActionLink("Reviews", "Index", new { sortOrder = ViewBag.ReviewSortParm }, new { @class = "sort-review" })</th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var game in Model)
+        {
+            <tr>
+                <td>@game.Title</td>
+                <td>@game.Rating</td>
+                <td>
+                    <a asp-controller="Review" asp-action="List" asp-route-id="@game.GameId">@game.TotalReviews</a>
+                </td>
+                <td>
+                    <a asp-controller="Game" asp-action="View" asp-route-id="@game.GameId">View Game Info</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

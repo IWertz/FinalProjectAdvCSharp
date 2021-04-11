@@ -1,0 +1,86 @@
+﻿@model User
+@{
+    ViewBag.Title = "Authentication";
+}
+
+<style>
+    .row.vertical-divider {
+        overflow: hidden;
+    }
+
+        .row.vertical-divider > div[class^="col-"] {
+            text-align: center;
+            padding-bottom: 100px;
+            margin-bottom: -100px;
+            border-left: 3px solid #F2F7F9;
+            border-right: 3px solid #F2F7F9;
+        }
+
+        .row.vertical-divider div[class^="col-"]:first-child {
+            border-left: none;
+        }
+
+        .row.vertical-divider div[class^="col-"]:last-child {
+            border-right: none;
+        }
+</style>
+
+<h2>Authentication</h2>
+<div class="row vertical-divider" style="margin-top: 30px">
+    <div class="col-sm-6">
+        <p><strong>Sign In</strong></p>
+        <p style="color:red;">@ViewBag.errorMessage</p>
+
+        <form id="LogIn" asp-controller="Home" asp-action="Authentication" method="post">
+            <div class="form-group">
+                <label asp-for="UserName">User Name</label>
+                <input asp-for="UserName" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" class="form-control" />
+            </div>
+
+            <div class="form-inline justify-content-around">
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <a asp-action="Index" class="btn btn-outline-primary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-sm-6">
+        <p><strong>Create New Account</strong></p>
+        <p style="color:lightblue;">@ViewBag.CompletionMessage</p>
+        <p style="color:red;">@ViewBag.FailCompletionMessage</p>
+
+        <form id="CreateUser" asp-controller="User" asp-action="Add" method="post">
+            <div class="form-group">
+                <label asp-for="UserName">User Name</label>
+                <input asp-for="UserName" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" class="form-control" />
+            </div>
+
+            <input type="hidden" asp-for="UserId" />
+
+            <div class="form-inline justify-content-around">
+                <div class="form-group">
+                    <select asp-for="AuthLevel" class="form-control">
+                        <option value="">Select an Authorization Level</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

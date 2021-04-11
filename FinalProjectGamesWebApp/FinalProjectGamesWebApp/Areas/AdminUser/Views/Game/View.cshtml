@@ -1,0 +1,31 @@
+﻿@model Game
+@{
+    ViewData["Title"] = "View Game";
+}
+
+<h2>View Game</h2>
+
+<table class="table table-boardered table-striped">
+    <thead>
+        <tr>
+            <th>Game Id</th>
+            <th>Title</th>
+            <th>Rating</th>
+            <th>Total Reviews</th>
+            <th> </th>
+            <th> </th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@Model.GameId</td>
+            <td>@Model.Title</td>
+            <td>@Model.Rating</td>
+            <td>@Model.TotalReviews</td>
+            <td><a asp-controller="Game" asp-action="Edit" asp-route-id="@Model.GameId">Edit Game</a></td>
+            <td><a asp-controller="Game" asp-action="Delete" asp-route-id="@Model.GameId">Delete Game</a></td>
+            <td><a asp-controller="Home" asp-action="Index">Return to Home</a></td>
+        </tr>
+    </tbody>
+</table>

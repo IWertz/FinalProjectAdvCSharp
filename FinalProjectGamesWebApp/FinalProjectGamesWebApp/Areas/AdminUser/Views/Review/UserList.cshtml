@@ -1,0 +1,33 @@
+﻿@model List<Review>
+@{
+    ViewBag.Title = "User List";
+}
+
+<h2>My Reviews</h2>
+
+<p><strong>@ViewBag.UserName's Account</strong></p>
+<table class="table table-boardered table-striped">
+    <thead>
+        <tr>
+            <th>Game</th>
+            <th>User</th>
+            <th>Rating</th>
+            <th>Review Content</th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Review r in Model)
+        {
+            <tr>
+                <td>@r.Game.Title</td>
+                <td>@r.User.UserName</td>
+                <td>@r.Rating</td>
+                <td>@r.ReviewContent</td>
+                <td>
+                    <a asp-action="View" asp-controller="Review" asp-route-id="@r.ReviewId">View</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

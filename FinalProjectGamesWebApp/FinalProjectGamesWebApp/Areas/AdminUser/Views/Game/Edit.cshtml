@@ -1,0 +1,26 @@
+﻿@model Game
+@{
+    ViewData["Title"] = "Edit";
+}
+
+@if (Model.GameId == 0)
+{
+    <h2>Add Game</h2>
+}
+else
+{
+    <h2>Edit Game</h2>
+}
+<p style="color:red;">@ViewBag.FailEdit</p>
+<form asp-action="Edit" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Title">Title</label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <input type="hidden" asp-for="GameId" />
+
+    <button type="submit" class="btn btn-primary">Confirm</button>
+    <a asp-controller="Game" asp-action="View" asp-route-id="@Model.GameId" class="btn btn-primary">Cancel</a>
+</form>
