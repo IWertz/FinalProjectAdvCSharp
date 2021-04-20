@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using FinalProjectGamesWebApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace FinalProjectGamesWebApp.Controllers
 {
@@ -14,12 +15,12 @@ namespace FinalProjectGamesWebApp.Controllers
     {
         private void Update()
         {
-            var games = context.Games.ToList();
+            var games = game.List(new QueryOptions<Game> { });
             foreach(Game g in games)
             {
                 double totalRating = 0;
                 int totalReviews = 0;
-                var reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == g.GameId).ToList();
+                var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.GameId == g.GameId });
                 foreach(Review r in reviews)
                 {
                     totalRating += (double) r.Rating;
@@ -35,15 +36,18 @@ namespace FinalProjectGamesWebApp.Controllers
                     g.Rating = totalRating;
                     g.TotalReviews = totalReviews;
                 }
-                context.Games.Update(g);
+                game.Update(g);
             }
-            context.SaveChanges();
+            game.Save();
         }
-        private GameContext context { get; set; }
-
-        public HomeController(GameContext ctx)
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public HomeController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
         [Route("/")]
@@ -58,26 +62,26 @@ namespace FinalProjectGamesWebApp.Controllers
             {
                 ViewBag.UserName = CurrentUser.Current.UserName;
             }
-            List<Game> games;
+            IEnumerable<Game> games;
             switch (sortOrder)
             {
                 case "title_desc":
-                    games = context.Games.OrderByDescending(m => m.Title).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Title, OrderByDirection = "dsc" });
                     break;
                 case "rating":
-                    games = context.Games.OrderBy(m => m.Rating).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Rating});
                     break;
                 case "rating_desc":
-                    games = context.Games.OrderByDescending(m => m.Rating).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Rating, OrderByDirection = "dsc" });
                     break;
                 case "review":
-                    games = context.Games.OrderBy(m => m.TotalReviews).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.TotalReviews});
                     break;
                 case "review_desc":
-                    games = context.Games.OrderByDescending(m => m.TotalReviews).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.TotalReviews, OrderByDirection = "dsc" });
                     break;
                 default:
-                    games = context.Games.OrderBy(m => m.Title).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Title});
                     break;
             }
             return View(games);
@@ -97,13 +101,13 @@ namespace FinalProjectGamesWebApp.Controllers
 
         [Route("Authentication")]
         [HttpPost]
-        public IActionResult Authentication(User user)
+        public IActionResult Authentication(User us)
         {
             Console.WriteLine("Unauthenticated Home Authentication Response");
-            List<User> users = context.Users.ToList();
+            IEnumerable<User> users = user.List(new QueryOptions<User> {});
             foreach (User u in users)
             {
-                if (user.UserName == u.UserName && user.Password == u.Password)
+                if (us.UserName == u.UserName && us.Password == u.Password)
                 {
                     CurrentUser.Current = u;
                     ViewBag.errorMessage = "";
