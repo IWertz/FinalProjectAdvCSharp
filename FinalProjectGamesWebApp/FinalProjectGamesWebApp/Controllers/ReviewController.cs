@@ -10,13 +10,18 @@ namespace FinalProjectGamesWebApp.Controllers
 {
     public class ReviewController : Controller
     {
-        private GameContext context { get; set; }
-
-        public ReviewController(GameContext ctx)
+        //repo setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public ReviewController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //returns a list of reviews based on sort parameters
         [HttpGet]
         public IActionResult List(int id, string sortOrder)
         {
@@ -25,41 +30,42 @@ namespace FinalProjectGamesWebApp.Controllers
             ViewBag.RatingSortParm = sortOrder == "rating_desc" ? "rating" : "rating_desc";
             ViewBag.SortOrder = sortOrder;
 
-            CurrentGame.Current = context.Games.Find(id);
+            CurrentGame.Current = game.Get(id);
             ViewBag.GameTitle = CurrentGame.Current.Title;
             ViewBag.GameId = CurrentGame.Current.GameId;
 
-            List<Review> reviews;
+            IEnumerable<Review> reviews;
             switch (sortOrder)
             {
                 case "user_desc":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderByDescending(m => m.User.UserName).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.User.UserName, OrderByDirection = "dsc" });
                     break;
                 case "rating":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderBy(m => m.Rating).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.Rating });
                     break;
                 case "rating_desc":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderByDescending(m => m.Rating).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.Rating, OrderByDirection = "dsc" });
                     break;
                 default:
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderBy(m => m.User.UserName).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.User.UserName });
                     break;
             }
             return View(reviews);
         }
 
+        //views a single review
         [HttpGet]
         public IActionResult View(int id)
         {
             Console.WriteLine("Unauthenticated Review View Request");
-            Review review = null;
-            var reviews = context.Reviews.Include(m => m.User).Include(mbox => mbox.Game).Where(m => m.ReviewId == id).ToList(); 
+            Review re = null;
+            var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.ReviewId == id });
             foreach (Review r in reviews)
             {
-                review = r;
+                re = r;
             }
 
-            return View(review);
+            return View(re);
         }
     }
 }

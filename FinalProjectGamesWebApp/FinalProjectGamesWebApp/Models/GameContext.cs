@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //game context class, holds database connections that created the migration based on the coded tables below
     public class GameContext :DbContext
     {
         public GameContext(DbContextOptions<GameContext> options) : base(options)

@@ -11,38 +11,45 @@ namespace FinalProjectGamesWebApp.Areas.NormalUser.Controllers
     [Area("NormalUser")]
     public class UserController : Controller
     {
-        private GameContext context { get; set; }
-
-        public UserController(GameContext ctx)
+        //repository setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public UserController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //allows users to view the information about their account
         [Route("NormalUser/User/Account")]
         public IActionResult Account()
         {
             return View(CurrentUser.Current);
         }
 
+        //allows users to edit the information about their account
         [Route("NormalUser/User/Edit")]
         [HttpGet]
         public IActionResult Edit(int id)
         {
             Console.WriteLine("User User Edit Request");
-            var user = context.Users.Find(id);
-            return View(user);
+            var us = user.Get(id);
+            return View(us);
         }
 
+        //updates the database, if authentication level changes, they move to their proper place
         [Route("NormalUser/User/Edit")]
         [HttpPost]
-        public IActionResult Edit(User user)
+        public IActionResult Edit(User us)
         {
             Console.WriteLine("User User Edit Response");
             if (ModelState.IsValid)
             {
-                context.Users.Update(user);
-                context.SaveChanges();
-                CurrentUser.Current = user;
+                user.Update(us);
+                user.Save();
+                CurrentUser.Current = us;
                 ViewBag.FailEdit = "";
                 switch (CurrentUser.Current.AuthLevel)
                 {
@@ -63,27 +70,29 @@ namespace FinalProjectGamesWebApp.Areas.NormalUser.Controllers
             }
         }
 
+        //allows users to delete their account
         [Route("NormalUser/User/Delete")]
         [HttpGet]
         public IActionResult Delete(int id)
         {
             Console.WriteLine("User User Delete Request");
-            var user = context.Users.Find(id);
-            return View(user);
+            var us = user.Get(id);
+            return View(us);
         }
 
+        //saves changes to database, deletes cascading reviews made by the user, and wipes user computer of user info
         [Route("NormalUser/User/Delete")]
         [HttpPost]
-        public IActionResult Delete(User user)
+        public IActionResult Delete(User us)
         {
             Console.WriteLine("User User Edit Response");
-            var reviews = context.Reviews.Where(u => u.UserId == user.UserId).ToList();
+            var reviews = review.List(new QueryOptions<Review> { Where = r => r.UserId == us.UserId });
             foreach(Review r in reviews)
             {
-                context.Reviews.Remove(r);
+                review.Delete(r);
             }
-            context.Users.Remove(user);
-            context.SaveChanges();
+            user.Delete(us);
+            user.Save();
             CurrentUser.Current = null;
             return RedirectToAction("Index", "Home", new { area = "" });
         }

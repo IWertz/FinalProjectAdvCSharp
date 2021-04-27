@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //query options class, allows created repositories to do specific querys on the database without creating a new 
+    //database context
     public class QueryOptions<T>
     {
         public Expression<Func<T, Object>> OrderBy { get; set; }

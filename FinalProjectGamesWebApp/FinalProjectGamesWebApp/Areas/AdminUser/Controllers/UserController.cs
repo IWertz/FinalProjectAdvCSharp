@@ -5,44 +5,52 @@ using System.Linq;
 using System.Threading.Tasks;
 using FinalProjectGamesWebApp.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FinalProjectGamesWebApp.Areas.AdminUser.Controllers
 {
     [Area("AdminUser")]
     public class UserController : Controller
     {
-        private GameContext context { get; set; }
-
-        public UserController(GameContext ctx)
+        //repository setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public UserController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //allows users to view the information about their account
         [Route("AdminUser/User/Account")]
         public IActionResult Account()
         {
             return View(CurrentUser.Current);
         }
 
+        //allows users to edit the information about their account
         [Route("AdminUser/User/Edit")]
         [HttpGet]
         public IActionResult Edit(int id)
         {
             Console.WriteLine("Admin User Edit Request");
-            var user = context.Users.Find(id);
-            return View(user);
+            var u = user.Get(id);
+            return View(u);
         }
 
+        //updates the database, if authentication level changes, they move to their proper place
         [Route("AdminUser/User/Edit")]
         [HttpPost]
-        public IActionResult Edit(User user)
+        public IActionResult Edit(User u)
         {
             Console.WriteLine("Admin User Edit Response");
             if (ModelState.IsValid)
             {
-                context.Users.Update(user);
-                context.SaveChanges();
-                CurrentUser.Current = user;
+                user.Update(u);
+                user.Save();
+                CurrentUser.Current = u;
                 ViewBag.FailEdit = "";
                 switch (CurrentUser.Current.AuthLevel)
                 {
@@ -63,27 +71,29 @@ namespace FinalProjectGamesWebApp.Areas.AdminUser.Controllers
             }
         }
 
+        //allows users to delete their account
         [Route("AdminUser/User/Delete")]
         [HttpGet]
         public IActionResult Delete(int id)
         {
             Console.WriteLine("Admin User Delete Request");
-            var user = context.Users.Find(id);
-            return View(user);
+            var u = user.Get(id);
+            return View(u);
         }
 
+        //saves changes to database, deletes cascading reviews made by the user, and wipes user computer of user info
         [Route("AdminUser/User/Delete")]
         [HttpPost]
-        public IActionResult Delete(User user)
+        public IActionResult Delete(User u)
         {
             Console.WriteLine("Admin User Delete Response");
-            var reviews = context.Reviews.Where(u => u.UserId == user.UserId).ToList();
+            var reviews = review.List(new QueryOptions<Review> { Where = r => r.UserId == u.UserId });
             foreach (Review r in reviews)
             {
-                context.Reviews.Remove(r);
+                review.Delete(r);
             }
-            context.Users.Remove(user);
-            context.SaveChanges();
+            user.Delete(u);
+            user.Save();
             CurrentUser.Current = null;
             return RedirectToAction("Index", "Home", new { area = "" });
         }

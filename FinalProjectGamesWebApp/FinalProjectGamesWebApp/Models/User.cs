@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //user class, holds userid, username, password, authlevel
     public class User
     {
         public int UserId { get; set; }

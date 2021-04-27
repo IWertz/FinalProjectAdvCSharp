@@ -13,14 +13,16 @@ namespace FinalProjectGamesWebApp.Areas.AdminUser.Controllers
     [Area("AdminUser")]
     public class HomeController : Controller
     {
+        //Update() refreshes the database every time a user returns to the main menu in order to see if any new 
+        //reviews or changes in rating occur
         private void Update()
         {
-            var games = context.Games.ToList();
+            var games = game.List(new QueryOptions<Game> { });
             foreach (Game g in games)
             {
                 double totalRating = 0;
                 int totalReviews = 0;
-                var reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == g.GameId).ToList();
+                var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.GameId == g.GameId });
                 foreach (Review r in reviews)
                 {
                     totalRating += (double)r.Rating;
@@ -37,17 +39,23 @@ namespace FinalProjectGamesWebApp.Areas.AdminUser.Controllers
                     g.Rating = totalRating;
                     g.TotalReviews = totalReviews;
                 }
-                context.Games.Update(g);
+                game.Update(g);
             }
-            context.SaveChanges();
+            game.Save();
         }
-        private GameContext context { get; set; }
 
-        public HomeController(GameContext ctx)
+        //repository setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public HomeController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //takes in sorting parameters and returns a sorted list of games
         [Route("AdminUser")]
         public IActionResult Index(string sortOrder)
         {
@@ -60,26 +68,26 @@ namespace FinalProjectGamesWebApp.Areas.AdminUser.Controllers
             {
                 ViewBag.UserName = CurrentUser.Current.UserName;
             }
-            List<Game> games;
+            IEnumerable<Game> games;
             switch (sortOrder)
             {
                 case "title_desc":
-                    games = context.Games.OrderByDescending(m => m.Title).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Title, OrderByDirection = "dsc" });
                     break;
                 case "rating":
-                    games = context.Games.OrderBy(m => m.Rating).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Rating });
                     break;
                 case "rating_desc":
-                    games = context.Games.OrderByDescending(m => m.Rating).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Rating, OrderByDirection = "dsc" });
                     break;
                 case "review":
-                    games = context.Games.OrderBy(m => m.TotalReviews).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.TotalReviews });
                     break;
                 case "review_desc":
-                    games = context.Games.OrderByDescending(m => m.TotalReviews).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.TotalReviews, OrderByDirection = "dsc" });
                     break;
                 default:
-                    games = context.Games.OrderBy(m => m.Title).ToList();
+                    games = game.List(new QueryOptions<Game> { OrderBy = g => g.Title });
                     break;
             }
             return View(games);

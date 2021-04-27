@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //repository class, follows the irepository interface to implement standardized repository pattern
     public class Repository<T> : IRepository<T> where T : class
     {
         protected GameContext context { get; set; }

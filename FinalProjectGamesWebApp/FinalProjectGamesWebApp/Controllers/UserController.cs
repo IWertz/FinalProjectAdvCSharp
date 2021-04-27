@@ -10,20 +10,26 @@ namespace FinalProjectGamesWebApp.Controllers
 {
     public class UserController : Controller
     {
-        private GameContext context { get; set; }
-
-        public UserController(GameContext ctx)
+        //repo setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public UserController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //takes in user as a new user, and if there are no conflicts with the user model or database, it allows a 
+        //new user to be created
         [HttpPost]
-        public IActionResult Add(User user)
+        public IActionResult Add(User us)
         {
             Console.WriteLine("Unauthenticated User Add Response");
-            foreach (User u in context.Users.ToList())
+            foreach (User u in user.List(new QueryOptions<User> { }))
             {
-                if (user.UserName == u.UserName)
+                if (us.UserName == u.UserName)
                 {
                     ViewBag.CompletionMessage = "";
                     ViewBag.errorMessage = "";
@@ -33,9 +39,9 @@ namespace FinalProjectGamesWebApp.Controllers
             }
             if (ModelState.IsValid)
             {
-                if (user.UserId == 0) context.Users.Add(user);
-                else context.Users.Update(user);
-                context.SaveChanges();
+                if (us.UserId == 0) user.Insert(us);
+                else user.Update(us);
+                user.Save();
                 ViewBag.CompletionMessage = "Account successfully created!";
                 ViewBag.errorMessage = "";
                 ViewBag.FailCompletionMessage = "";

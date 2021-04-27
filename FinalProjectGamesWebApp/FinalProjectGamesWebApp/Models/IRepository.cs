@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //repository interface, created for standardized repository pattern
     public interface IRepository<T> where T : class
     {
         IEnumerable<T> List(QueryOptions<T> options);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProjectGamesWebApp.Models
 {
+    //review class, holds reviewid, userid, user, gameid, game, rating, and review content
     public class Review
     {
         public int ReviewId { get; set; }

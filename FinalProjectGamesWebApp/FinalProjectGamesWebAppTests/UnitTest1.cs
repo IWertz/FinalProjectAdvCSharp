@@ -3,6 +3,8 @@ using Xunit;
 using FinalProjectGamesWebApp.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc;
+using FinalProjectGamesWebApp.Areas.AdminUser.Controllers;
+using Moq;
 
 namespace FinalProjectGamesWebAppTests
 {
@@ -64,6 +66,22 @@ namespace FinalProjectGamesWebAppTests
 
             //Assert
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void TestRepo()
+        {
+            //Arrange
+            var repGame = new Mock<IRepository<Game>>();
+            var repReview = new Mock<IRepository<Review>>();
+            var repUser = new Mock<IRepository<User>>();
+            var controller = new HomeController(repGame.Object, repReview.Object, repUser.Object);
+
+            //Act
+            var result = controller.Index("");
+
+            //Assert
+            Assert.IsType<ViewResult>(result);
         }
     }
 }

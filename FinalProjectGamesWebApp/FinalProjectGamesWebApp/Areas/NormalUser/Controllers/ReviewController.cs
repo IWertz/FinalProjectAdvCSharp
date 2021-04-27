@@ -11,13 +11,18 @@ namespace FinalProjectGamesWebApp.Areas.NormalUser.Controllers
     [Area("NormalUser")]
     public class ReviewController : Controller
     {
-        private GameContext context { get; set; }
-
-        public ReviewController(GameContext ctx)
+        //repository setup
+        private IRepository<Game> game { get; set; }
+        private IRepository<Review> review { get; set; }
+        private IRepository<User> user { get; set; }
+        public ReviewController(IRepository<Game> ctxGame, IRepository<Review> ctxReview, IRepository<User> ctxUser)
         {
-            context = ctx;
+            game = ctxGame;
+            review = ctxReview;
+            user = ctxUser;
         }
 
+        //returns a list of reviews based on sort parameters
         [Route("NormalUser/Review/List")]
         [HttpGet]
         public IActionResult List(int id, string sortOrder)
@@ -27,54 +32,57 @@ namespace FinalProjectGamesWebApp.Areas.NormalUser.Controllers
             ViewBag.RatingSortParm = sortOrder == "rating_desc" ? "rating" : "rating_desc";
             ViewBag.SortOrder = sortOrder;
 
-            CurrentGame.Current = context.Games.Find(id);
+            CurrentGame.Current = game.Get(id);
             ViewBag.GameTitle = CurrentGame.Current.Title;
             ViewBag.GameId = CurrentGame.Current.GameId;
 
-            List<Review> reviews;
+            IEnumerable<Review> reviews;
             switch (sortOrder)
             {
                 case "user_desc":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderByDescending(m => m.User.UserName).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.User.UserName, OrderByDirection = "dsc" });
                     break;
                 case "rating":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderBy(m => m.Rating).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.Rating });
                     break;
                 case "rating_desc":
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderByDescending(m => m.Rating).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.Rating, OrderByDirection = "dsc" });
                     break;
                 default:
-                    reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.GameId == id).OrderBy(m => m.User.UserName).ToList();
+                    reviews = review.List(new QueryOptions<Review> { Includes = "Game, User", Where = r => r.GameId == id, OrderBy = r => r.User.UserName });
                     break;
             }
             return View(reviews);
         }
 
+        //allows users to check all the reviews that they have created, based on creation date
         [Route("NormalUser/Review/UserList")]
         [HttpGet]
         public IActionResult UserList()
         {
             Console.WriteLine("User Review UserList Request");
             ViewBag.UserName = CurrentUser.Current.UserName;
-            var reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.UserId == CurrentUser.Current.UserId).OrderBy(m => m.ReviewId).ToList();
+            var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.UserId == CurrentUser.Current.UserId, OrderBy = r => r.ReviewId });
             return View(reviews);
         }
 
+        //views a single review
         [Route("NormalUser/Review/View")]
         [HttpGet]
         public IActionResult View(int id)
         {
             Console.WriteLine("User Review View Request");
-            Review review = null;
-            var reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.ReviewId == id).ToList(); 
+            Review re = null;
+            var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.ReviewId == id });
             foreach (Review r in reviews)
             {
-                review = r;
+                re = r;
             }
 
-            return View(review);
+            return View(re);
         }
 
+        //returns a new review to the edit method, allows users to create a new review
         [Route("NormalUser/Review/Add")]
         [HttpGet]
         public IActionResult Add()
@@ -83,68 +91,72 @@ namespace FinalProjectGamesWebApp.Areas.NormalUser.Controllers
             return View("Edit", new Review());
         }
 
+        //returns new or current review to edit to the edit page
         [Route("NormalUser/Review/Edit")]
         [HttpGet]
         public IActionResult Edit(int id)
         {
             Console.WriteLine("User Review Edit Request");
-            Review review = null;
-            var reviews = context.Reviews.Include(m => m.User).Include(m => m.Game).Where(m => m.ReviewId == id).ToList();
+            Review re = null;
+            var reviews = review.List(new QueryOptions<Review> { Includes = "User, Game", Where = r => r.ReviewId == id });
             foreach (Review r in reviews)
             {
-                review = r;
+                re = r;
             }
 
-            return View(review);
+            return View(re);
         }
 
+        //allows users to add or edit reviews, saves to the database if not a failed edit, and returns finished review
         [Route("NormalUser/Review/Edit")]
         [HttpPost]
-        public IActionResult Edit(Review review)
+        public IActionResult Edit(Review r)
         {
             Console.WriteLine("User Review Edit Response");
             if (ModelState.IsValid)
             {
-                if (review.ReviewId == 0)
+                if (r.ReviewId == 0)
                 {
-                    review.User = context.Users.Find(CurrentUser.Current.UserId);
-                    review.Game = context.Games.Find(CurrentGame.Current.GameId);
-                    context.Reviews.Add(review);
+                    r.User = user.Get(CurrentUser.Current.UserId);
+                    r.Game = game.Get(CurrentGame.Current.GameId);
+                    review.Insert(r);
                 } else
                 {
-                    review.User = context.Users.Find(review.UserId);
-                    review.Game = context.Games.Find(review.GameId);
-                    context.Reviews.Update(review);
+                    r.User = user.Get(r.UserId);
+                    r.Game = game.Get(r.GameId);
+                    review.Update(r);
                 }
-                context.SaveChanges();
+                review.Save();
                 ViewBag.FailEdit = "";
-                return View("View", review);
+                return View("View", r);
             }
             else
             {
                 Console.WriteLine("User Review Edit Response Failed");
                 ViewBag.FailEdit = "Could not edit review. Please try again.";
-                return View(review);
+                return View(r);
             }
         }
 
+        //allows users to delete their reviews, returns a review to the delete confirmation page
         [Route("NormalUser/Review/Delete")]
         [HttpGet]
         public IActionResult Delete(int id)
         {
             Console.WriteLine("User Review Delete Request");
-            var review = context.Reviews.Find(id);
-            return View(review);
+            var r = review.Get(id);
+            return View(r);
         }
 
+        //carries out the delete after confirmation is given
         [Route("NormalUser/Review/Delete")]
         [HttpPost]
-        public IActionResult Delete(Review review)
+        public IActionResult Delete(Review r)
         {
             Console.WriteLine("User Review Delete Response");
             ViewBag.GameId = CurrentGame.Current.GameId;
-            context.Reviews.Remove(review);
-            context.SaveChanges();
+            review.Delete(r);
+            review.Save();
             return RedirectToAction("List");
         }
     }
